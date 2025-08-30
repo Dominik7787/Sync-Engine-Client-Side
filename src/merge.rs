@@ -8,11 +8,11 @@ pub fn parse_hlc(s: &str) -> (i128, i64, String) {
     let mut parts = s.splitn(3, '-');
     let ms = parts.next().unwrap_or("0").parse::<i128>().unwrap_or(0);
     let ctr = parts.next().unwrap_or("0").parse::<i64>().unwrap_or(0);
-    let origin = parts.next().unwrap_or("");
+    let origin = parts.next().unwrap_or("").to_string();
     (ms, ctr, origin)
 }
 
-pub fn lww_merge_row(local: &Value, remote: &Value, changed_fields: Option<&[str]>) -> Value {
+pub fn lww_merge_row(local: &Value, remote: &Value, changed_fields: Option<&[&str]>) -> Value {
     match changed_fields {
         None => remote.clone(),
         Some(fields) => {
