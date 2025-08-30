@@ -1,6 +1,7 @@
 pub mod oplog;
 pub mod sync;
 pub mod merge;
+pub mod ffi;
 
 pub use oplog::{ApplyDomainOp, Change, RemoteOp, SyncEngine, SyncError};
 pub use sync::SyncClient;
