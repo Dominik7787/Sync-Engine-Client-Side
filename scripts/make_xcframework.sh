@@ -18,7 +18,7 @@ fi
 cbindgen --crate ${CRATE_NAME} --config cbindgen.toml --output "${HDR}"
 
 # Build for iOS device and simulator
-IOS_TARGETS=(aarch64-apple-ios aarch64-apple-ios-sim x86_64-apple-ios)
+IOS_TARGETS=(aarch64-apple-ios aarch64-apple-ios-sim)
 for TARGET in "${IOS_TARGETS[@]}"; do
   rustup target add "$TARGET" || true
   cargo build --release --target "$TARGET"
@@ -48,14 +48,12 @@ MMAP
 
 make_slice aarch64-apple-ios ios-arm64
 make_slice aarch64-apple-ios-sim ios-arm64-simulator
-make_slice x86_64-apple-ios ios-x86_64-simulator
 
 # Create XCFramework
 rm -rf "$FRAMEWORK_DIR"
 xcodebuild -create-xcframework \
   -library ${OUT_DIR}/ios-arm64/${LIB_A} -headers ${OUT_DIR}/ios-arm64/Headers \
   -library ${OUT_DIR}/ios-arm64-simulator/${LIB_A} -headers ${OUT_DIR}/ios-arm64-simulator/Headers \
-  -library ${OUT_DIR}/ios-x86_64-simulator/${LIB_A} -headers ${OUT_DIR}/ios-x86_64-simulator/Headers \
   -output "$FRAMEWORK_DIR"
 
 echo "Built: ${FRAMEWORK_DIR}"

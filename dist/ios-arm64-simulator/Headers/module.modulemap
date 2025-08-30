@@ -1,0 +1,4 @@
+module SyncEngineCore {
+  header "sync_engine.h"
+  export *
+}

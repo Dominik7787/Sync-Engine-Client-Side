@@ -12,8 +12,8 @@ let package = Package(
   targets: [
     .binaryTarget(
       name: "SyncEngineCore",
-      url: "https://github.com/REPLACE_OWNER/sync-engine/releases/download/0.1.0/SyncEngine.xcframework.zip",
-      checksum: "REPLACE_CHECKSUM"
+      url: "https://github.com/Dominik7787/Sync-Engine-Client-Side/releases/download/v0.1.0/SyncEngine.xcframework.zip",
+      checksum: "6a2d19d48ca9bce19523d22893ea65cd609ca6bf54e66b37ed790aa589448c1d"
     ),
     .target(
       name: "SyncEngine",
