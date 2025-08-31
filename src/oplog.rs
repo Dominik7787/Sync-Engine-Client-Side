@@ -112,6 +112,12 @@ v TEXT NOT NULL
 );
 "#,
         )?;
+        // Ensure a schema version exists; default to 1
+        self.conn.execute(
+            "INSERT INTO sync_kv(k,v) VALUES('schema_version','1')
+ON CONFLICT(k) DO NOTHING",
+            [],
+        )?;
         Ok(())
     }
 
@@ -378,5 +384,47 @@ LIMIT ?1",
             params![cursor],
         )?;
         Ok(())
+    }
+
+    /// Return the current integer schema version stored in `sync_kv`.
+    pub fn get_schema_version(&self) -> Result<i32, SyncError> {
+        let ver: Option<String> = self
+            .conn
+            .query_row("SELECT v FROM sync_kv WHERE k='schema_version'", [], |r| r.get(0))
+            .optional()?;
+        Ok(ver.and_then(|s| s.parse::<i32>().ok()).unwrap_or(1))
+    }
+
+    /// Run migrations up to `target_version` transactionally.
+    /// This placeholder uses no-op steps and only bumps the stored version.
+    /// Domain-specific migrations can be wired here in the future.
+    pub fn run_migrations(&self, target_version: i32) -> Result<(), SyncError> {
+        if target_version < 1 {
+            return Err(SyncError::State("invalid target_version"));
+        }
+        let current = self.get_schema_version()?;
+        if current >= target_version { return Ok(()); }
+
+        let tx = self.conn.unchecked_transaction()?;
+        // Apply stepwise migrations here as needed.
+        // For now, we just advance the version without schema changes.
+        tx.execute(
+            "INSERT INTO sync_kv(k,v) VALUES('schema_version',?1)
+ON CONFLICT(k) DO UPDATE SET v=excluded.v",
+            params![target_version.to_string()],
+        )?;
+        tx.commit()?;
+        Ok(())
+    }
+
+    /// Execute closure `f` inside a transaction and commit if `f` returns Ok.
+    pub fn with_tx<R, F>(&self, f: F) -> Result<R, SyncError>
+    where
+        F: FnOnce(&rusqlite::Transaction<'_>) -> Result<R, SyncError>,
+    {
+        let tx = self.conn.unchecked_transaction()?;
+        let result = f(&tx)?;
+        tx.commit()?;
+        Ok(result)
     }
 }

@@ -15,6 +15,20 @@
 
 typedef struct SyncConnHandle SyncConnHandle;
 
+typedef struct SE_Op {
+  const char *remote_id;
+  const char *table_name;
+  const char *row_id;
+  int32_t op_type;
+  const char *columns_json;
+  const char *new_row_json;
+  const char *old_row_json;
+  const char *hlc;
+  const char *origin;
+} SE_Op;
+
+typedef int (*SE_ApplyCallback)(void *user_data, const struct SE_Op *op);
+
 void sync_string_free(char *s);
 
 struct SyncConnHandle *sync_open(const char *path);
@@ -51,5 +65,23 @@ int sync_mark_ops_acked(struct SyncConnHandle *handle, const int64_t *ids, uintp
 char *sync_get_remote_cursor(struct SyncConnHandle *handle);
 
 int sync_set_remote_cursor(struct SyncConnHandle *handle, const char *cursor);
+
+int sync_last_error_code(void);
+
+char *sync_last_error_message(void);
+
+int sync_mark_ops_pushed(struct SyncConnHandle *handle, const int64_t *ids, uintptr_t len);
+
+int sync_get_schema_version(struct SyncConnHandle *handle, int32_t *out_version);
+
+int sync_run_migrations(struct SyncConnHandle *handle, int32_t target_version);
+
+int sync_tx_exec_current(const char *sql);
+
+int sync_apply_remote_ops(struct SyncConnHandle *handle,
+                          const struct SE_Op *ops,
+                          uintptr_t len,
+                          SE_ApplyCallback cb,
+                          void *user_data);
 
 #endif  /* SYNC_ENGINE_FFI_H */

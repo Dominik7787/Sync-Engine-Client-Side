@@ -1,0 +1,50 @@
+client:
+  name: basic
+  file-system: device-agnostic
+tools: {}
+targets:
+  "PackageStructure": ["<PackageStructure>"]
+  "SyncEngine-arm64-apple-macosx15.0-debug.module": ["<SyncEngine-arm64-apple-macosx15.0-debug.module>"]
+  "main": ["<SyncEngine-arm64-apple-macosx15.0-debug.module>"]
+  "test": ["<SyncEngine-arm64-apple-macosx15.0-debug.module>"]
+default: "main"
+nodes:
+  "/Users/dominik/Desktop/sync-engine/.build/index-build/artifacts/sync-engine/SyncEngineCore/SyncEngine.xcframework/":
+    is-directory-structure: true
+    content-exclusion-patterns: [".git",".build"]
+  "/Users/dominik/Desktop/sync-engine/swift/Sources/SyncEngine/":
+    is-directory-structure: true
+    content-exclusion-patterns: [".git",".build"]
+commands:
+  "/Users/dominik/Desktop/sync-engine/.build/index-build/arm64-apple-macosx/debug/SyncEngine.build/sources":
+    tool: write-auxiliary-file
+    inputs: ["<sources-file-list>","/Users/dominik/Desktop/sync-engine/swift/Sources/SyncEngine/SyncEngine.swift"]
+    outputs: ["/Users/dominik/Desktop/sync-engine/.build/index-build/arm64-apple-macosx/debug/SyncEngine.build/sources"]
+    description: "Write auxiliary file /Users/dominik/Desktop/sync-engine/.build/index-build/arm64-apple-macosx/debug/SyncEngine.build/sources"
+
+  "/Users/dominik/Desktop/sync-engine/.build/index-build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt":
+    tool: write-auxiliary-file
+    inputs: ["<swift-get-version>","/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc"]
+    outputs: ["/Users/dominik/Desktop/sync-engine/.build/index-build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt"]
+    always-out-of-date: "true"
+    description: "Write auxiliary file /Users/dominik/Desktop/sync-engine/.build/index-build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt"
+
+  "<SyncEngine-arm64-apple-macosx15.0-debug.module>":
+    tool: phony
+    inputs: ["/Users/dominik/Desktop/sync-engine/.build/index-build/arm64-apple-macosx/debug/Modules/SyncEngine.swiftmodule"]
+    outputs: ["<SyncEngine-arm64-apple-macosx15.0-debug.module>"]
+
+  "C.SyncEngine-arm64-apple-macosx15.0-debug.module":
+    tool: shell
+    inputs: ["/Users/dominik/Desktop/sync-engine/swift/Sources/SyncEngine/SyncEngine.swift","/Users/dominik/Desktop/sync-engine/.build/index-build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt","/Users/dominik/Desktop/sync-engine/.build/index-build/arm64-apple-macosx/debug/SyncEngine.build/sources"]
+    outputs: ["/Users/dominik/Desktop/sync-engine/.build/index-build/arm64-apple-macosx/debug/Modules/SyncEngine.swiftmodule"]
+    description: "Compiling Swift Module 'SyncEngine' (1 sources)"
+    args: ["/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc","-module-name","SyncEngine","-emit-dependencies","-emit-module","-emit-module-path","/Users/dominik/Desktop/sync-engine/.build/index-build/arm64-apple-macosx/debug/Modules/SyncEngine.swiftmodule","-output-file-map","/Users/dominik/Desktop/sync-engine/.build/index-build/arm64-apple-macosx/debug/SyncEngine.build/output-file-map.json","-parse-as-library","-incremental","@/Users/dominik/Desktop/sync-engine/.build/index-build/arm64-apple-macosx/debug/SyncEngine.build/sources","-I","/Users/dominik/Desktop/sync-engine/.build/index-build/arm64-apple-macosx/debug/Modules","-target","arm64-apple-macosx10.13","-enable-batch-mode","-Onone","-enable-testing","-j10","-DSWIFT_PACKAGE","-DDEBUG","-module-cache-path","/Users/dominik/Desktop/sync-engine/.build/index-build/arm64-apple-macosx/debug/ModuleCache","-parseable-output","-parse-as-library","-emit-objc-header","-emit-objc-header-path","/Users/dominik/Desktop/sync-engine/.build/index-build/arm64-apple-macosx/debug/SyncEngine.build/SyncEngine-Swift.h","-swift-version","5","-Xfrontend","-experimental-lazy-typecheck","-Xfrontend","-experimental-skip-all-function-bodies","-Xfrontend","-experimental-allow-module-with-compiler-errors","-Xfrontend","-empty-abi-descriptor","-sdk","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.5.sdk","-F","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks","-F","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/PrivateFrameworks","-I","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib","-L","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib","-g","-Xcc","-isysroot","-Xcc","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.5.sdk","-Xcc","-F","-Xcc","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks","-Xcc","-F","-Xcc","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/PrivateFrameworks","-Xcc","-fPIC","-Xcc","-g"]
+
+  "PackageStructure":
+    tool: package-structure-tool
+    inputs: ["/Users/dominik/Desktop/sync-engine/.build/index-build/artifacts/sync-engine/SyncEngineCore/SyncEngine.xcframework/","/Users/dominik/Desktop/sync-engine/swift/Sources/SyncEngine/","/Users/dominik/Desktop/sync-engine/Package.swift","/Users/dominik/Desktop/sync-engine/Package.resolved"]
+    outputs: ["<PackageStructure>"]
+    description: "Planning build"
+    allow-missing-inputs: true
+

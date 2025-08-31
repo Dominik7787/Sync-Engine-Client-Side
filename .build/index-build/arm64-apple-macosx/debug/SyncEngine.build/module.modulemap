@@ -1,0 +1,4 @@
+module SyncEngine {
+    header "/Users/dominik/Desktop/sync-engine/.build/index-build/arm64-apple-macosx/debug/SyncEngine.build/SyncEngine-Swift.h"
+    requires objc
+}

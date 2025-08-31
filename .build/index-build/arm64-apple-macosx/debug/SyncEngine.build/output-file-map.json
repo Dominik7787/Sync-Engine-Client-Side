@@ -1,0 +1,11 @@
+{
+  "": {
+    "swift-dependencies": "/Users/dominik/Desktop/sync-engine/.build/index-build/arm64-apple-macosx/debug/SyncEngine.build/master.swiftdeps"
+  },
+  "/Users/dominik/Desktop/sync-engine/swift/Sources/SyncEngine/SyncEngine.swift": {
+    "dependencies": "/Users/dominik/Desktop/sync-engine/.build/index-build/arm64-apple-macosx/debug/SyncEngine.build/SyncEngine.d",
+    "object": "/Users/dominik/Desktop/sync-engine/.build/index-build/arm64-apple-macosx/debug/SyncEngine.build/SyncEngine.swift.o",
+    "swiftmodule": "/Users/dominik/Desktop/sync-engine/.build/index-build/arm64-apple-macosx/debug/SyncEngine.build/SyncEngine~partial.swiftmodule",
+    "swift-dependencies": "/Users/dominik/Desktop/sync-engine/.build/index-build/arm64-apple-macosx/debug/SyncEngine.build/SyncEngine.swiftdeps"
+  }
+}

@@ -89,6 +89,117 @@ public final class SyncConnection {
         if res != 0 { throw NSError(domain: "SyncEngine", code: Int(res)) }
     }
 
+    public func markOpsPushed(_ ids: [Int64]) throws {
+        let res = ids.withUnsafeBufferPointer { buf in
+            sync_mark_ops_pushed(handle, buf.baseAddress, UInt(buf.count))
+        }
+        if res != 0 { throw NSError(domain: "SyncEngine", code: Int(res)) }
+    }
+
+    public func getSchemaVersion() throws -> Int32 {
+        var v: Int32 = 0
+        let rc = withUnsafeMutablePointer(to: &v) { ptr in
+            sync_get_schema_version(handle, ptr)
+        }
+        if rc != 0 { throw NSError(domain: "SyncEngine", code: Int(rc)) }
+        return v
+    }
+
+    public func runMigrations(targetVersion: Int32) throws {
+        let rc = sync_run_migrations(handle, targetVersion)
+        if rc != 0 { throw NSError(domain: "SyncEngine", code: Int(rc)) }
+    }
+
+    public struct RemoteOp {
+        public enum OpType: Int32 { case insert = 0, update = 1, delete = 2 }
+        public var remoteId: String
+        public var table: String
+        public var rowId: String
+        public var opType: OpType
+        public var columnsJSON: String?
+        public var newRowJSON: String?
+        public var oldRowJSON: String?
+        public var hlc: String
+        public var origin: String
+    }
+
+    public typealias ApplyCallback = (_ op: RemoteOp) -> Int32
+
+    public func applyRemoteOps(_ ops: [RemoteOp], callback: ApplyCallback) throws {
+        // Trampoline capturing Swift closure and bridging to C callback signature
+        class Box { let cb: ApplyCallback; init(_ cb: @escaping ApplyCallback) { self.cb = cb } }
+        let box = Box(callback)
+        let unmanaged = Unmanaged.passRetained(box)
+        defer { unmanaged.release() }
+
+        let cCallback: (@convention(c) (UnsafeMutableRawPointer?, UnsafePointer<SE_Op>?) -> Int32) = { userData, cOpPtr in
+            guard let userData = userData, let cOp = cOpPtr?.pointee else { return 3 }
+            let box = Unmanaged<Box>.fromOpaque(userData).takeUnretainedValue()
+            func str(_ p: UnsafePointer<CChar>?) -> String { p != nil ? String(cString: p!) : "" }
+            let op = RemoteOp(
+                remoteId: str(cOp.remote_id),
+                table: str(cOp.table_name),
+                rowId: str(cOp.row_id),
+                opType: RemoteOp.OpType(rawValue: cOp.op_type) ?? .update,
+                columnsJSON: cOp.columns_json != nil ? str(cOp.columns_json) : nil,
+                newRowJSON: cOp.new_row_json != nil ? str(cOp.new_row_json) : nil,
+                oldRowJSON: cOp.old_row_json != nil ? str(cOp.old_row_json) : nil,
+                hlc: str(cOp.hlc),
+                origin: str(cOp.origin)
+            )
+            return box.cb(op)
+        }
+
+        var cOps: [SE_Op] = []
+        cOps.reserveCapacity(ops.count)
+        // Build C views using withCString lifetimes inside a nested scope to ensure pointers stay valid during the call.
+        try ops.withUnsafeBufferPointer { _ in
+            var storage: [(UnsafePointer<CChar>?, UnsafePointer<CChar>?, UnsafePointer<CChar>?, UnsafePointer<CChar>?, UnsafePointer<CChar>?, UnsafePointer<CChar>?, UnsafePointer<CChar>?)] = []
+            storage.reserveCapacity(ops.count)
+            for op in ops {
+                var rid: UnsafePointer<CChar>? = nil
+                var tbl: UnsafePointer<CChar>? = nil
+                var row: UnsafePointer<CChar>? = nil
+                var cols: UnsafePointer<CChar>? = nil
+                var nrow: UnsafePointer<CChar>? = nil
+                var orow: UnsafePointer<CChar>? = nil
+                var hlc: UnsafePointer<CChar>? = nil
+                var orig: UnsafePointer<CChar>? = nil
+                op.remoteId.withCString { rid = $0 }
+                op.table.withCString { tbl = $0 }
+                op.rowId.withCString { row = $0 }
+                if let cj = op.columnsJSON { cj.withCString { cols = $0 } }
+                if let nj = op.newRowJSON { nj.withCString { nrow = $0 } }
+                if let oj = op.oldRowJSON { oj.withCString { orow = $0 } }
+                op.hlc.withCString { hlc = $0 }
+                op.origin.withCString { orig = $0 }
+                storage.append((rid, tbl, row, cols, nrow, orow, hlc))
+                cOps.append(SE_Op(remote_id: rid, table_name: tbl, row_id: row, op_type: op.opType.rawValue, columns_json: cols, new_row_json: nrow, old_row_json: orow, hlc: hlc, origin: orig))
+            }
+            let rc = cOps.withUnsafeBufferPointer { buf in
+                sync_apply_remote_ops(handle, buf.baseAddress, UInt(buf.count), cCallback, unmanaged.toOpaque())
+            }
+            if rc != 0 { throw NSError(domain: "SyncEngine", code: Int(rc)) }
+        }
+    }
+
+    public func txExecCurrent(sql: String) throws {
+        let rc = sql.withCString { c in
+            sync_tx_exec_current(c)
+        }
+        if rc != 0 { throw NSError(domain: "SyncEngine", code: Int(rc)) }
+    }
+    public func lastError() -> (code: Int32, message: String) {
+        let code = sync_last_error_code()
+        let ptr = sync_last_error_message()
+        if let p = ptr {
+            let s = String(cString: p)
+            sync_string_free(p)
+            return (code, s)
+        }
+        return (code, "")
+    }
+
     public func getRemoteCursor() -> String? {
         let ptr = sync_get_remote_cursor(handle)
         guard let p = ptr else { return nil }
