@@ -2,7 +2,7 @@ import Foundation
 import SyncEngineCore
 
 public final class SyncConnection {
-    private var handle: UnsafeMutablePointer<SyncConnHandle>?
+    private var handle: UnsafeMutablePointer<SyncEngineCore.SyncConnHandle>?
 
     public init?(path: String) {
         path.withCString { cstr in
