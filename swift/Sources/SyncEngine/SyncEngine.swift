@@ -2,16 +2,18 @@ import Foundation
 import SyncEngineCore
 
 public final class SyncConnection {
-    private var handle: UnsafeMutableRawPointer?
+    private var handle: UnsafeMutablePointer<SyncConnHandle>?
 
     public init?(path: String) {
         path.withCString { cstr in
-            self.handle = UnsafeMutableRawPointer(sync_open(cstr))
+            self.handle = sync_open(cstr)
         }
         if handle == nil { return nil }
     }
 
-    deinit { sync_close(handle) }
+    deinit {
+        if let h = handle { sync_close(h) }
+    }
 
     public func initSchema() throws {
         if sync_init_schema(handle) != 0 { throw NSError(domain: "SyncEngine", code: 1) }
@@ -47,13 +49,13 @@ public final class SyncConnection {
         table.withCString { t in
             rowId.withCString { r in
                 origin.withCString { o in
-                    columnsJSON?.withCString { c in
-                        _ = c
+                    id = withOptionalCString(columnsJSON) { c in
+                        withOptionalCString(newRowJSON) { n in
+                            withOptionalCString(oldRowJSON) { ojson in
+                                sync_log_update(handle, t, r, c, n, ojson, o)
+                            }
+                        }
                     }
-                    let cptr = columnsJSON?.cString(using: .utf8)
-                    let nptr = newRowJSON?.cString(using: .utf8)
-                    let optr = oldRowJSON?.cString(using: .utf8)
-                    id = sync_log_update(handle, t, r, cptr, nptr, optr, o)
                 }
             }
         }
@@ -82,7 +84,7 @@ public final class SyncConnection {
 
     public func markOpsAcked(_ ids: [Int64]) throws {
         let res = ids.withUnsafeBufferPointer { buf in
-            sync_mark_ops_acked(handle, buf.baseAddress, buf.count)
+            sync_mark_ops_acked(handle, buf.baseAddress, UInt(buf.count))
         }
         if res != 0 { throw NSError(domain: "SyncEngine", code: Int(res)) }
     }
@@ -100,6 +102,15 @@ public final class SyncConnection {
             sync_set_remote_cursor(handle, c)
         }
         if res != 0 { throw NSError(domain: "SyncEngine", code: Int(res)) }
+    }
+}
+
+@inline(__always)
+private func withOptionalCString<T>(_ s: String?, _ body: (UnsafePointer<CChar>?) -> T) -> T {
+    if let s = s {
+        return s.withCString { body($0) }
+    } else {
+        return body(nil)
     }
 }
 
