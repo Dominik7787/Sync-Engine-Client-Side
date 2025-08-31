@@ -1,0 +1,29 @@
+{
+  "object" : {
+    "artifacts" : [
+      {
+        "kind" : "xcframework",
+        "packageRef" : {
+          "identity" : "sync-engine",
+          "kind" : "root",
+          "location" : "/Users/dominik/Desktop/sync-engine",
+          "name" : "sync-engine"
+        },
+        "path" : "/Users/dominik/Desktop/sync-engine/.build/artifacts/sync-engine/SyncEngineCore/SyncEngine.xcframework",
+        "source" : {
+          "checksum" : "6a2d19d48ca9bce19523d22893ea65cd609ca6bf54e66b37ed790aa589448c1d",
+          "type" : "remote",
+          "url" : "https://github.com/Dominik7787/Sync-Engine-Client-Side/releases/download/v0.1.0/SyncEngine.xcframework.zip"
+        },
+        "targetName" : "SyncEngineCore"
+      }
+    ],
+    "dependencies" : [
+
+    ],
+    "prebuilts" : [
+
+    ]
+  },
+  "version" : 7
+}
